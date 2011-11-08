@@ -12,11 +12,14 @@
 		var defaults = {
 			delay: 0,
 			defaultText: 'Type to Filter:',
+			ignoreClass: 'ignoreFilter',
+			selectFilter: 'input[type="text"].filter',
+			resetFilter: 'input[type="reset"].reset',
 			hideDefault: false,
 			zebra: false,
 			zBase: false,
+			multipleList: true,
 			addInputs: false
-
 		};
 
 		// Overwrite default settings with user provided ones.
@@ -47,9 +50,10 @@
 
 		// Cache all of our list/table elements so we don't have to select them over and over again.
 		var cache = $(filterTarget).find(child);
-		
+		var inputFilter = findFilterInput()
 		// Text input keyup event
-		wrap.find('input[type="text"]').keyup(function() {
+		
+		inputFilter.keyup(function() {
 
 			// For use in the following callback.
 			var input = $(this);
@@ -70,7 +74,7 @@
 					text = $(this).text().toLowerCase();
 					if (text.indexOf(filter) >= 0) {
 						$(this).show();
-					} else {
+					} else if (!ignoreItem(this)){
 						$(this).hide();
 					}
 				});
@@ -87,11 +91,11 @@
 		});
 
 		// Used to reset our text input and show all items in the filtered list
-		wrap.find('input[type="reset"]').click(function() {
+		findFilterReset().click(function() {
 
 			if (options.defaultText === false) {
 
-				wrap.find('input[type="text"]').attr('value', '');
+				inputFilter.attr('value', '');
 
 				if (options.hideDefault === false) {
 					cache.each(function(i) {
@@ -104,8 +108,7 @@
 				}
 
 			} else {
-
-				wrap.find('input[type="text"]').attr('value', options.defaultText);
+				inputFilter.attr('value', options.defaultText);
 
 				if (options.hideDefault === false) {
 					cache.each(function(i) {
@@ -126,11 +129,13 @@
 
 		// Used to set the default text of the text input if there is any
 		if (options.defaultText != false) {
-			var input = wrap.find('input[type="text"]');
+			var input = inputFilter;
 
+			console.log('set value');
 			input.attr('value', options.defaultText);
 
 			input.focus(function() {
+				console.log('focus');
 				
 				var curVal = $(this).attr('value');
 
@@ -141,7 +146,7 @@
 			});
 
 			input.blur(function() {
-				
+				console.log('blur');
 				var curVal = $(this).attr('value');
 
 				if (curVal === '') {
@@ -160,10 +165,30 @@
 
 		// Used for zebra striping list/table.
 		function zebraStriping() {
-
 			$(filterTarget).find(child + ':visible:odd').css({ background: options.zebra });
 			$(filterTarget).find(child + ':visible:even').css({ background: options.zBase });
 		}
-
+		
+		function ignoreItem(item){
+			if (options && options.ignoreItem) {
+				return options.ignoreItem(item);
+			}else{
+				return $(item).hasClass(options.ignoreClass);
+			}
+		}
+		
+		function findFilterInput(){
+			selectFilter = options.selectFilter;
+			if (options.multipleList)
+				return $(wrap).find(selectFilter);
+			return $(selectFilter);
+		}
+		
+		function findFilterReset(){
+			resetFilter = options.resetFilter;
+			if (options.multipleList)
+				return $(wrap).find(resetFilter);
+			return $(resetFilter);
+		}
 	}
 })(jQuery);
